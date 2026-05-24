@@ -9,8 +9,15 @@ jobs:
   deploy:
     runs-on: self-hosted
     steps:
-      - name: Pull latest changes
-        run: git -C ${{ github.workspace }} pull
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Sync files to deploy path
+        run: |
+          rsync -a --delete \
+            --exclude='.env' \
+            --exclude='data/' \
+            ${{ github.workspace }}/ /data/music-quiz/
 
       - name: Rebuild and restart container
-        run: docker compose -f ${{ github.workspace }}/docker-compose.yml up -d --build
+        run: docker compose -f /data/music-quiz/docker-compose.yml up -d --build
