@@ -302,13 +302,13 @@ function _updateCta() {
 // Step renderers
 // ------------------------------------------------------------------
 
-// Match admin.js:126 PLATFORM_LABELS so the wizard shows "Sonos" / "Music Assistant"
-// instead of the raw lowercase HA platform slug.
+// Match admin.js PLATFORM_LABELS so the wizard shows friendly platform names.
 const PLATFORM_LABELS = {
     music_assistant: 'Music Assistant',
     sonos: 'Sonos',
     alexa_media: 'Alexa',
     alexa: 'Alexa',
+    spotify: 'Spotify Connect',
 };
 
 function _platformLabel(raw) {
@@ -335,13 +335,7 @@ function _renderSpeakers() {
     if (!list) return;
     const players = (cachedStatus && cachedStatus.media_players) || [];
     if (players.length === 0) {
-        list.innerHTML = `<div class="wiz-row" style="cursor:default"><div class="wiz-row-text"><div class="wiz-row-name">${_t(
-            'wizard.step1.empty',
-            'No speakers found yet'
-        )}</div><div class="wiz-row-sub">${_t(
-            'wizard.step1.emptyHint',
-            'Install Music Assistant and refresh'
-        )}</div></div></div>`;
+        list.innerHTML = `<div class="wiz-row" style="cursor:default"><div class="wiz-row-text"><div class="wiz-row-name">No playback device found</div><div class="wiz-row-sub">Connect Spotify and reload the page</div></div></div>`;
         return;
     }
     list.innerHTML = players
@@ -1310,6 +1304,28 @@ export async function init() {
     });
 
     const ls = typeof window !== 'undefined' ? window.localStorage : null;
+
+    // Standalone bootstrap: if no player is configured yet, auto-select the single
+    // Spotify player and provider so the wizard starts at the playlist step.
+    if (ls && !ls.getItem(LS_SELECTED_PLAYER)) {
+        try {
+            const status = cachedStatus || await _fetchStatus();
+            if (!cachedStatus) cachedStatus = status;
+            const players = (status && status.media_players) || [];
+            if (players.length === 1 && players[0].entity_id === 'spotify') {
+                ls.setItem(LS_SELECTED_PLAYER, 'spotify');
+                chosenSpeaker = 'spotify';
+                const rawS = ls.getItem(LS_GAME_SETTINGS);
+                const existingS = rawS ? JSON.parse(rawS) : {};
+                if (!existingS.provider) {
+                    existingS.provider = 'spotify';
+                    chosenProvider = 'spotify';
+                    ls.setItem(LS_GAME_SETTINGS, JSON.stringify(existingS));
+                }
+            }
+        } catch (e) { /* private mode or network error */ }
+    }
+
     if (shouldTrigger(ls)) {
         show();
     } else {

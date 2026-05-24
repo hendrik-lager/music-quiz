@@ -78,6 +78,7 @@ def _register_routes(app: web.Application) -> None:
         player_page,
         sw_js,
         status_api,
+        capabilities_api,
         albumart_proxy,
     )
     from server.game_views import (
@@ -122,6 +123,7 @@ def _register_routes(app: web.Application) -> None:
 
     # Status / core API
     r.add_get("/beatify/api/status", status_api)
+    r.add_get("/beatify/api/capabilities", capabilities_api)
     r.add_get("/beatify/api/game/status", game_status)
     r.add_get("/beatify/api/albumart", albumart_proxy)
 

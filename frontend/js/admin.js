@@ -187,8 +187,8 @@ let revealAdvanceOrigIcon = null;
 const STORAGE_LAST_PLAYER = 'beatify_last_player';
 const STORAGE_GAME_SETTINGS = 'beatify_game_settings';
 
-// Setup sections to hide/show as a group
-const setupSections = ['media-players', 'music-service', 'playlists', 'game-settings', 'admin-actions', 'my-requests', 'party-lights', 'tts-settings', 'ha-entities'];
+// Setup sections to hide/show as a group (HA-specific sections excluded for standalone mode)
+const setupSections = ['media-players', 'music-service', 'playlists', 'game-settings', 'admin-actions', 'my-requests'];
 
 // Platform display labels for speaker grouping
 const PLATFORM_LABELS = {
@@ -196,6 +196,7 @@ const PLATFORM_LABELS = {
     sonos: { icon: '🔊', label: 'Sonos' },
     alexa_media: { icon: '📢', label: 'Alexa' },
     alexa: { icon: '📢', label: 'Alexa' },
+    spotify: { icon: '🎵', label: 'Spotify Connect' },
 };
 
 // Alias BeatifyUtils for convenience
@@ -1123,13 +1124,11 @@ function renderMediaPlayers(players) {
         // No compatible players found - show setup message with MA link
         container.innerHTML = `
             <div class="no-players-message">
-                <h3>🎵 No Compatible Players Found</h3>
-                <p>Beatify works with Music Assistant, Sonos, and Alexa players.</p>
-                <p><strong>Recommended:</strong> Install Music Assistant for the best experience with any speaker.</p>
+                <h3>🎵 No Playback Device Found</h3>
+                <p>Connect your Spotify account to enable playback.</p>
                 <div class="button-group">
-                    <a href="https://music-assistant.io/getting-started/"
-                       target="_blank" class="btn btn-secondary">
-                        📖 Music Assistant Setup Guide
+                    <a href="/auth/spotify/login" class="btn btn-secondary">
+                        🎵 Connect Spotify
                     </a>
                     <button onclick="loadStatus()" class="btn btn-primary">
                         🔄 Refresh
@@ -1425,6 +1424,9 @@ function updateProviderWarning(player) {
         alexa: {
             warning: 'Service must be linked in Alexa app',
             caveat: 'Uses voice search - may occasionally play a different version of the song',
+        },
+        spotify: {
+            warning: 'Keep this admin tab open — music plays here via Spotify Connect',
         },
     };
 

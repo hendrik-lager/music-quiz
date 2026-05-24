@@ -44,8 +44,14 @@ def build_status_response(
         "media_players": [
             {
                 "entity_id": "spotify",
-                "name": "Spotify (Browser)",
+                "friendly_name": "Spotify Connect",
                 "platform": "spotify",
+                "state": "idle",
+                "supports_spotify": True,
+                "supports_apple_music": False,
+                "supports_youtube_music": False,
+                "supports_tidal": False,
+                "supports_deezer": False,
             }
         ],
         "playlists": playlists,

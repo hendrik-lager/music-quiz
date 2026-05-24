@@ -68,6 +68,11 @@ async def status_api(request: web.Request) -> web.Response:
     return web.json_response(status)
 
 
+async def capabilities_api(request: web.Request) -> web.Response:
+    """Return standalone capability flags (no Home Assistant, no HA lights/TTS)."""
+    return web.json_response({"has_lights": False, "has_tts": False})
+
+
 async def albumart_proxy(request: web.Request) -> web.Response:
     """Same-origin proxy for album art URLs."""
     raw_url = request.query.get("url", "")

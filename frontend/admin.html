@@ -76,20 +76,20 @@
         <!-- Frame 1: speakers -->
         <section class="wiz-frame" data-frame="1" hidden>
             <div class="wiz-body">
-                <div class="wiz-eyebrow" data-i18n="wizard.step1.eyebrow">Step 1 · Speakers</div>
-                <h2 class="wiz-title" data-i18n="wizard.step1.title">Where should the music play?</h2>
-                <p class="wiz-sub" data-i18n="wizard.step1.sub">Pick one or more smart speakers. We'll play through the one you pick first.</p>
+                <div class="wiz-eyebrow">Step 1 · Playback</div>
+                <h2 class="wiz-title">Where should the music play?</h2>
+                <p class="wiz-sub">Music plays directly in this browser tab via Spotify Connect. Keep this tab open during the game.</p>
                 <div id="wiz-speaker-list" class="wiz-list"></div>
-                <p class="wiz-sub wiz-hint"><span data-i18n="wizard.step1.hint">Don't see your speaker?</span> <a href="https://music-assistant.io/" target="_blank" rel="noopener" data-i18n="wizard.step1.hintLink">Check supported types</a></p>
+                <p class="wiz-sub wiz-hint">A Spotify Premium account is required for playback.</p>
             </div>
         </section>
 
         <!-- Frame 2: music service -->
         <section class="wiz-frame" data-frame="2" hidden>
             <div class="wiz-body">
-                <div class="wiz-eyebrow" data-i18n="wizard.step2.eyebrow">Step 2 · Music service</div>
-                <h2 class="wiz-title" data-i18n="wizard.step2.title">Who's streaming?</h2>
-                <p class="wiz-sub" data-i18n="wizard.step2.sub">Pick the service your speaker uses. Beatify plays songs through whatever you already have configured in Home Assistant.</p>
+                <div class="wiz-eyebrow">Step 2 · Music service</div>
+                <h2 class="wiz-title">Who's streaming?</h2>
+                <p class="wiz-sub">Select your music service. Spotify is required for Spotify Connect playback.</p>
                 <div id="wiz-provider-list" class="wiz-provider-grid"></div>
                 <div id="wiz-provider-explainer" class="wiz-explainer" hidden></div>
             </div>
@@ -332,8 +332,8 @@
                     <div class="skeleton skeleton-row"></div>
                 </div>
                 <p class="supported-players-hint">
-                    Supported: Music Assistant, Sonos, and Alexa players.
-                    <a href="https://music-assistant.io/" target="_blank" rel="noopener">Use Music Assistant</a> for Chromecast/Nest devices.
+                    Music plays via the Spotify Web Playback SDK in this browser tab.
+                    A Spotify Premium account is required.
                 </p>
             </div>
         </section>
@@ -561,8 +561,8 @@
             </div>
         </section>
 
-        <!-- Party Lights Section (#331) -->
-        <section id="party-lights" class="section-collapsible collapsed" aria-labelledby="party-lights-heading">
+        <!-- Party Lights Section (#331) — hidden in standalone mode (requires Home Assistant) -->
+        <section id="party-lights" class="section-collapsible collapsed" aria-labelledby="party-lights-heading" hidden>
             <button type="button" class="section-header-collapsible" id="party-lights-toggle" aria-expanded="false" aria-controls="party-lights-content">
                 <span class="section-icon" aria-hidden="true">🎆</span>
                 <span>Party Lights</span>
@@ -642,8 +642,8 @@
             </div>
         </section>
 
-        <!-- TTS Announcements Section (#447) -->
-        <section id="tts-settings" class="section-collapsible collapsed" aria-labelledby="tts-settings-heading">
+        <!-- TTS Announcements Section (#447) — hidden in standalone mode (requires Home Assistant) -->
+        <section id="tts-settings" class="section-collapsible collapsed" aria-labelledby="tts-settings-heading" hidden>
             <button type="button" class="section-header-collapsible" id="tts-settings-toggle" aria-expanded="false" aria-controls="tts-settings-content">
                 <span class="section-icon" aria-hidden="true">🔊</span>
                 <span data-i18n="admin.ttsAnnouncements">TTS Announcements</span>
@@ -971,8 +971,8 @@
             </div>
         </section>
 
-        <!-- HA Entities Info Section (#441) -->
-        <section id="ha-entities" class="section-collapsible collapsed" aria-labelledby="ha-entities-heading">
+        <!-- HA Entities Info Section (#441) — hidden in standalone mode -->
+        <section id="ha-entities" class="section-collapsible collapsed" aria-labelledby="ha-entities-heading" hidden>
             <button type="button" class="section-header-collapsible" id="ha-entities-toggle" aria-expanded="false" aria-controls="ha-entities-content">
                 <span class="section-icon" aria-hidden="true">🏠</span>
                 <span data-i18n="admin.haEntities">HA Entities</span>
