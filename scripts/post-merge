@@ -1,0 +1,13 @@
+#!/bin/bash
+# Git post-merge hook — runs automatically after every successful git pull
+
+REPO_DIR="$(git rev-parse --show-toplevel)"
+COMPOSE_FILE="$REPO_DIR/docker-compose.yml"
+
+echo "[music-quiz] Changes pulled — rebuilding and restarting..."
+
+cd "$REPO_DIR" || exit 1
+
+docker compose -f "$COMPOSE_FILE" up -d --build
+
+echo "[music-quiz] Deployment done."

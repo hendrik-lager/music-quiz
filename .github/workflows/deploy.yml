@@ -1,0 +1,16 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Pull latest changes
+        run: git -C ${{ github.workspace }} pull
+
+      - name: Rebuild and restart container
+        run: docker compose -f ${{ github.workspace }}/docker-compose.yml up -d --build
