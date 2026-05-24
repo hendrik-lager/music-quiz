@@ -738,11 +738,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     // silent recovery would transition LOBBY → PLAYING (auto-starting the
     // game). Visible regression when navigating Analytics → Admin with a
     // lobby open.
-    // - If loadStatus found an active LOBBY, it already called showLobbyView()
-    //   which invokes BeatifyHome.renderSession() — no extra enter() needed.
+    // - If loadStatus found an active LOBBY, enter() is safe: currentGame is
+    //   already set so enter() calls renderSession() instead of startSession().
+    //   Without this, home-mode is never activated on page refresh with existing
+    //   LOBBY, so home-view stays hidden and setup sections show with skeleton.
+    //   Mirrors the same pattern in handleAdminStateUpdate (lines ~3655-3658).
     // - If there is no active game, currentGame stays null → enter() runs and
     //   (for a configured user) creates a fresh LOBBY, as before.
-    if (!currentGame) {
+    if (!currentGame || (currentGame.phase === 'LOBBY' && !document.body.classList.contains('home-mode'))) {
         window.BeatifyHome.enter();
     }
 
@@ -1918,8 +1921,9 @@ function showSetupView() {
 
 /**
  * Show lobby view — pure delegate to BeatifyHome. The legacy #lobby-section
- * render was removed in rc25; home-mode is now guaranteed to be on whenever
- * a LOBBY state arrives (see handleAdminStateUpdate).
+ * render was removed in rc25; home-mode is guaranteed to be on whenever a
+ * LOBBY state arrives: via handleAdminStateUpdate (WS path) or the
+ * DOMContentLoaded enter() call after loadStatus() (page-load path).
  */
 function showLobbyView(gameData) {
     currentView = 'lobby';
