@@ -686,7 +686,8 @@ def discover_playlists(playlist_dir: "Path") -> list[dict]:
                 return sum(1 for s in songs if s.get(field) and _re.match(pattern, s.get(field, "")))
 
             playlists.append({
-                "file": str(rel),
+                "path": str(rel),
+                "filename": json_file.name,
                 "name": data.get("name", json_file.stem),
                 "description": data.get("description", ""),
                 "version": data.get("version", "0.0"),
@@ -702,8 +703,10 @@ def discover_playlists(playlist_dir: "Path") -> list[dict]:
                 "errors": errors,
             })
         except Exception as err:  # noqa: BLE001
+            rel_err = json_file.relative_to(playlist_dir)
             playlists.append({
-                "file": str(json_file.relative_to(playlist_dir)),
+                "path": str(rel_err),
+                "filename": json_file.name,
                 "name": json_file.stem,
                 "description": "",
                 "version": "0.0",
