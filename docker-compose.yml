@@ -10,8 +10,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.music-quiz.rule=Host(`${APP_HOST}`)"
-      - "traefik.http.routers.music-quiz.entrypoints=http"
-      - "traefik.http.services.music-quiz.loadbalancer.server.port=80"
+      - "traefik.http.routers.music-quiz.entrypoints=https"
+      - "traefik.http.services.music-quiz.loadbalancer.server.port=443"
 
 networks:
   traefik_web:
