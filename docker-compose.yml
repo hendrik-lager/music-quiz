@@ -4,6 +4,7 @@ services:
     env_file: .env
     volumes:
       - ./data:/app/data
+      - ./playlists:/app/playlists:ro
     restart: unless-stopped
     networks:
       - traefik_web
@@ -11,7 +12,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.music-quiz.rule=Host(`${APP_HOST}`)"
       - "traefik.http.routers.music-quiz.entrypoints=https"
-      - "traefik.http.services.music-quiz.loadbalancer.server.port=8080"
+      - "traefik.http.services.music-quiz.loadbalancer.server.port=3000"
 
 networks:
   traefik_web:

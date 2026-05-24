@@ -1,23 +1,25 @@
-FROM python:3.12-slim
-
+FROM node:22-alpine AS deps
 WORKDIR /app
+COPY package*.json ./
+RUN npm ci --production=false
 
-# Install Python dependencies
-COPY backend/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+FROM node:22-alpine AS builder
+WORKDIR /app
+COPY package*.json tsconfig*.json postcss.config.js tailwind.config.ts next.config.ts ./
+RUN npm ci
+COPY src ./src
+COPY playlists ./playlists
+RUN npm run build
 
-# Copy application code
-COPY backend/ ./backend/
-COPY frontend/ ./frontend/
-COPY playlists/ ./playlists/
-
-# Create data directory
+FROM node:22-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public 2>/dev/null || true
+COPY --from=deps /app/node_modules ./node_modules
+COPY package.json server.ts tsconfig.json ./
+COPY playlists ./playlists
 RUN mkdir -p /app/data
-
-ENV PYTHONUNBUFFERED=1
-ENV PORT=8080
-ENV HOST=0.0.0.0
-
-EXPOSE 8080
-
-CMD ["python", "backend/main.py"]
+VOLUME ["/app/data"]
+EXPOSE 3000
+CMD ["./node_modules/.bin/tsx", "server.ts"]
