@@ -14,9 +14,10 @@ jobs:
 
       - name: Sync files to deploy path
         run: |
-          rsync -a --delete \
+          rsync -rlptD --delete \
             --exclude='.env' \
             --exclude='data/' \
+            --exclude='.git/' \
             ${{ github.workspace }}/ /data/music-quiz/
 
       - name: Rebuild and restart container
