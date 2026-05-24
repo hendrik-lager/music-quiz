@@ -1493,8 +1493,10 @@
     <script src="/beatify/static/js/vendor/no-sleep.min.js"></script>
     <script src="/beatify/static/js/admin.js"></script>
     <script src="/beatify/static/js/tts-settings.js"></script>
-    <!-- Spotify Web Playback SDK — must load before spotify-player.js -->
-    <script src="https://sdk.scdn.co/spotify-player.js"></script>
+    <!-- spotify-player.js sets window.onSpotifyWebPlaybackSDKReady before the SDK
+         loads. The SDK is async so it never blocks DOMContentLoaded — if the CDN
+         is unreachable the admin page still initialises normally. -->
     <script src="/beatify/static/js/spotify-player.js"></script>
+    <script async src="https://sdk.scdn.co/spotify-player.js"></script>
 </body>
 </html>
