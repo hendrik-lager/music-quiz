@@ -385,9 +385,7 @@ export class GameState {
 
   spielerEinladen(socketId: string): void {
     const spieler = this.spieler.holePerSocket(socketId)
-    if (spieler) {
-      this.io.of('/spiel').to(socketId).emit('zustand', this.erstelleZustand(spieler.name))
-    }
+    this.io.of('/spiel').to(socketId).emit('zustand', this.erstelleZustand(spieler?.name))
   }
 
   holeHostSocket(): string | null {
