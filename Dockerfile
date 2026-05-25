@@ -1,10 +1,12 @@
 FROM node:22-alpine AS deps
 WORKDIR /app
+RUN apk add --no-cache python3 make g++
 COPY package*.json ./
 RUN npm ci --production=false
 
 FROM node:22-alpine AS builder
 WORKDIR /app
+RUN apk add --no-cache python3 make g++
 COPY package*.json tsconfig*.json postcss.config.js tailwind.config.ts next.config.ts ./
 RUN npm ci
 COPY src ./src
