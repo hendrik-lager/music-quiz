@@ -5,6 +5,7 @@ import { PlayerRegistry, type SpielerSession } from './PlayerRegistry'
 import { ScoringService } from './ScoringService'
 import { mischeLieder, wähleKünstlerOptionen, wähleFilmOptionen } from './PlaylistLoader'
 import { AnalyticsService } from '../analytics/AnalyticsService'
+import { SpotifyAuth } from '../spotify/SpotifyAuth'
 
 export interface SpielKonfig {
   schwierigkeit: 'leicht' | 'normal' | 'schwer'
@@ -131,6 +132,9 @@ export class GameState {
     }
     this.rundenTimer = setTimeout(() => this.rundeAutomatischBeenden(), this.konfig.rundenDauer * 1000)
     this.rundenStart = Date.now()
+    if (this.aktuellesLied) {
+      SpotifyAuth.getInstance().spieleTrack(this.aktuellesLied.uri).catch(console.error)
+    }
     this.tts(`Runde ${this.aktuelleRundenIndex + 1} von ${this.konfig.runden}. Los!`)
     this.sendeBroadcast()
     return { erfolg: true }
@@ -281,6 +285,7 @@ export class GameState {
       this.rundenTimer = null
     }
 
+    SpotifyAuth.getInstance().pause().catch(console.error)
     this.phase = 'AUFDECKEN'
     const lied = this.aktuellesLied!
     const ergebnisse = this.scoring.berechneRunde(

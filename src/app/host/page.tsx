@@ -7,6 +7,22 @@ import type { SpielZustand } from '@/shared/types'
 import { STANDARD_KONFIG } from '@/shared/constants'
 import { spreche } from '@/lib/tts'
 
+interface SpotifyPlayer {
+  addListener: (event: string, cb: (data: { device_id: string }) => void) => void
+  connect: () => Promise<boolean>
+  disconnect: () => void
+}
+
+declare global {
+  interface Window {
+    onSpotifyWebPlaybackSDKReady: () => void
+    Spotify: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      Player: new (...args: any[]) => SpotifyPlayer
+    }
+  }
+}
+
 let socket: Socket | null = null
 
 function holeOderErstelleSocket(): Socket {
@@ -646,7 +662,60 @@ export default function HostSeite() {
   const [fehler, setFehler] = useState<string | null>(null)
   const [playlisten, setPlaylisten] = useState<PlaylistInfo[]>([])
   const [spotifyVerbunden, setSpotifyVerbunden] = useState(false)
+  const [spotifyDeviceId, setSpotifyDeviceId] = useState<string | null>(null)
   const [lautstaerke, setLautstaerke] = useState(50)
+
+  // Initialize Spotify Web Playback SDK when Spotify is connected
+  useEffect(() => {
+    if (!spotifyVerbunden) return
+
+    let player: SpotifyPlayer | null = null
+
+    const init = async () => {
+      const res = await fetch('/api/auth/spotify/token')
+      if (!res.ok) return
+
+      window.onSpotifyWebPlaybackSDKReady = () => {
+        player = new window.Spotify.Player({
+          name: 'Music Quiz Host',
+          getOAuthToken: (cb: (token: string) => void) => {
+            fetch('/api/auth/spotify/token')
+              .then(r => r.json() as Promise<{ accessToken: string }>)
+              .then(d => cb(d.accessToken))
+              .catch(() => cb(''))
+          },
+          volume: 0.5,
+        })
+
+        player.addListener('ready', ({ device_id }: { device_id: string }) => {
+          setSpotifyDeviceId(device_id)
+        })
+
+        player.connect()
+      }
+
+      if (!document.getElementById('spotify-sdk')) {
+        const script = document.createElement('script')
+        script.id = 'spotify-sdk'
+        script.src = 'https://sdk.scdn.co/spotify-player.js'
+        document.head.appendChild(script)
+      } else if (window.Spotify) {
+        window.onSpotifyWebPlaybackSDKReady()
+      }
+    }
+
+    init().catch(console.error)
+
+    return () => {
+      if (player) player.disconnect()
+    }
+  }, [spotifyVerbunden])
+
+  // Register device ID with server whenever we have both a game and a device
+  useEffect(() => {
+    if (!spielId || !spotifyDeviceId) return
+    holeOderErstelleSocket().emit('spotify_device_registrieren', { deviceId: spotifyDeviceId })
+  }, [spielId, spotifyDeviceId])
 
   useEffect(() => {
     const gespeichert = localStorage.getItem('admin_token')
