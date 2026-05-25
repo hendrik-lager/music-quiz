@@ -717,10 +717,21 @@ export default function HostSeite() {
       setGespeicherteKonfig(konfig)
 
       const s = holeOderErstelleSocket()
-      s.emit('host_beitreten', { spielId: id, adminToken })
+
+      s.off('zustand')
+      s.off('fehler')
+      s.off('host_verbunden')
 
       s.on('zustand', (data: SpielZustand) => setZustand(data))
-      s.on('host_verbunden', () => console.log('Host verbunden'))
+      s.on('host_verbunden', () => {
+        s.emit('zustand_anfordern', {})
+      })
+      s.on('fehler', (err: { code: string; nachricht: string }) => {
+        setFehler(`Socket-Fehler: ${err.nachricht ?? err.code}`)
+        setSpielId(null)
+      })
+
+      s.emit('host_beitreten', { spielId: id, adminToken })
     } catch (err) {
       setFehler('Netzwerkfehler. Bitte versuche es erneut.')
     } finally {
@@ -770,6 +781,23 @@ export default function HostSeite() {
   }
 
   if (!zustand) {
+    if (spielId) {
+      return (
+        <div className="min-h-screen flex items-center justify-center p-4">
+          <div className="text-center space-y-4">
+            <div className="text-5xl">🎮</div>
+            <div className="text-xl font-bold">Spiel erstellt</div>
+            <div className="text-4xl font-black text-brand-400 tracking-widest">{spielId}</div>
+            <div className="text-white/50 text-sm">Verbinde mit Server…</div>
+            {fehler && (
+              <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-3 text-sm text-red-300 max-w-sm">
+                {fehler}
+              </div>
+            )}
+          </div>
+        </div>
+      )
+    }
     return (
       <SpielSetup
         onSpielErstellen={handleSpielErstellen}
