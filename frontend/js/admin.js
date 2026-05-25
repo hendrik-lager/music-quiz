@@ -158,7 +158,8 @@ let previousLobbyPlayers = [];
 let lobbyPollingInterval = null;
 
 // Issue #477: Admin WebSocket state
-let adminWs = null;
+// var (not let) so spotify-player.js can access it as window.adminWs
+var adminWs = null;
 let adminPlayerName = null;   // Set when admin joins as player
 let adminSessionId = null;    // Set on join_ack — passed to /play so it can
                               // reconnect via {type:'reconnect'} instead of a
