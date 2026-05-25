@@ -82,7 +82,6 @@ export interface SpielZustand {
   frist?: number
   letzteRunde?: boolean
   lied?: LiedZustand
-  hostLied?: Pick<LiedZustand, 'jahr' | 'funFaktDe'>
   rangliste?: { name: string; punkte: number; rang: number }[]
   künstlerChallenge?: KünstlerChallenge
   filmChallenge?: FilmChallenge

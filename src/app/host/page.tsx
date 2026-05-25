@@ -634,16 +634,6 @@ function SpielSteuerung({
           </div>
         )}
 
-        {/* Host-Lied-Info */}
-        {zustand.hostLied?.jahr && (
-          <div className="card p-4 bg-brand-500/5 border-brand-500/20">
-            <h2 className="font-semibold text-sm text-brand-400 mb-2">Host-Info (nur für dich)</h2>
-            <div className="text-2xl font-black">{zustand.hostLied.jahr}</div>
-            {zustand.hostLied.funFaktDe && (
-              <div className="text-xs text-white/50 mt-2">{zustand.hostLied.funFaktDe}</div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   )

@@ -442,7 +442,6 @@ export class GameState {
         jahr: this.phase === 'AUFDECKEN' || this.phase === 'ENDE' ? lied.year : undefined,
         funFaktDe: this.phase === 'AUFDECKEN' ? lied.fun_fact_de : undefined,
       }
-      zustand.hostLied = { jahr: lied.year, funFaktDe: lied.fun_fact_de }
     }
 
     if (this.künstlerChallenge) {
