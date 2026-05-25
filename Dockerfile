@@ -20,7 +20,7 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json server.ts tsconfig.json ./
-COPY --from=builder /app/src/server ./src/server
+COPY --from=builder /app/src ./src
 COPY playlists ./playlists
 RUN mkdir -p /app/data
 VOLUME ["/app/data"]
