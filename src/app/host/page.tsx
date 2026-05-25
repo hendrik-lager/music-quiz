@@ -714,7 +714,7 @@ export default function HostSeite() {
   // Register device ID with server whenever we have both a game and a device
   useEffect(() => {
     if (!spielId || !spotifyDeviceId) return
-    holeOderErstelleSocket().emit('spotify_device_registrieren', { deviceId: spotifyDeviceId })
+    socket?.emit('spotify_device_registrieren', { deviceId: spotifyDeviceId })
   }, [spielId, spotifyDeviceId])
 
   useEffect(() => {
