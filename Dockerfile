@@ -11,13 +11,13 @@ COPY package*.json tsconfig*.json postcss.config.js tailwind.config.ts next.conf
 RUN npm ci
 COPY src ./src
 COPY playlists ./playlists
-RUN npm run build
+RUN mkdir -p /app/public && npm run build
 
 FROM node:22-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public 2>/dev/null || true
+COPY --from=builder /app/public ./public
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json server.ts tsconfig.json ./
 COPY playlists ./playlists
