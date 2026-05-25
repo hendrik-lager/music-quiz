@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react'
 import { io, type Socket } from 'socket.io-client'
+import QRCode from 'qrcode'
 import type { SpielZustand } from '@/shared/types'
 import { STANDARD_KONFIG } from '@/shared/constants'
 import { spreche } from '@/lib/tts'
@@ -227,6 +228,161 @@ function SpielSetup({
   )
 }
 
+// ─── Lobby-Ansicht ────────────────────────────────────────────────────────────
+
+function SpielLobby({
+  zustand,
+  konfig,
+  onAktion,
+}: {
+  zustand: SpielZustand
+  konfig: SpielKonfig | null
+  onAktion: (aktion: string, daten?: Record<string, unknown>) => void
+}) {
+  const [qrDataUrl, setQrDataUrl] = useState('')
+  const beitrittsUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/spielen?spiel=${zustand.spielId}`
+    : ''
+
+  useEffect(() => {
+    if (!beitrittsUrl) return
+    QRCode.toDataURL(beitrittsUrl, {
+      width: 256,
+      margin: 2,
+      color: { dark: '#ffffff', light: '#1e1e30' },
+    }).then(setQrDataUrl).catch(() => {})
+  }, [beitrittsUrl])
+
+  const spieler = Object.values(zustand.spieler).filter(sp => !sp.istHost)
+  const verbundene = spieler.filter(sp => sp.verbunden)
+
+  const schwierigkeitLabel: Record<string, string> = { leicht: 'Leicht', normal: 'Normal', schwer: 'Schwer' }
+
+  const aktiveModiBadges: string[] = []
+  if (konfig?.künstlerChallenge) aktiveModiBadges.push('Künstler-Challenge')
+  if (konfig?.filmQuiz) aktiveModiBadges.push('Film-Quiz')
+  if (konfig?.introModus) aktiveModiBadges.push('Intro-Modus')
+  if (zustand.nächsterGewinntModus) aktiveModiBadges.push('Nächster gewinnt')
+
+  return (
+    <div className="min-h-screen p-4 max-w-5xl mx-auto">
+      <div className="pt-8 mb-6">
+        <div className="text-5xl mb-3">🎮</div>
+        <h1 className="text-3xl font-bold">Lobby</h1>
+        <p className="text-white/60 mt-1">Warte auf Spieler – scanne den QR Code zum Beitreten</p>
+      </div>
+
+      <div className="flex flex-col lg:flex-row gap-4">
+        {/* Linke Spalte – QR Code & Beitritt */}
+        <div className="flex-1 space-y-4">
+          <div className="card p-6 flex flex-col items-center text-center">
+            {qrDataUrl ? (
+              <img
+                src={qrDataUrl}
+                alt="QR Code zum Beitreten"
+                className="rounded-xl mb-4"
+                width={256}
+                height={256}
+              />
+            ) : (
+              <div className="w-64 h-64 bg-white/5 rounded-xl mb-4 animate-pulse" />
+            )}
+            <div className="text-6xl font-black text-brand-400 tracking-widest mb-2">
+              {zustand.spielId}
+            </div>
+            <div className="text-sm text-white/40 mb-3 break-all">{beitrittsUrl}</div>
+            <button
+              onClick={() => navigator.clipboard?.writeText(beitrittsUrl)}
+              className="btn-secondary text-sm py-2 px-4"
+            >
+              Link kopieren
+            </button>
+          </div>
+
+          {/* Spielkonfiguration */}
+          <div className="card p-4">
+            <h2 className="font-semibold mb-3">Spielkonfiguration</h2>
+            <div className="grid grid-cols-3 gap-3 mb-3">
+              <div className="bg-white/5 rounded-xl p-3 text-center">
+                <div className="text-xs text-white/40 mb-1">Schwierigkeit</div>
+                <div className="font-semibold text-sm">
+                  {schwierigkeitLabel[zustand.schwierigkeit] ?? zustand.schwierigkeit}
+                </div>
+              </div>
+              <div className="bg-white/5 rounded-xl p-3 text-center">
+                <div className="text-xs text-white/40 mb-1">Runden</div>
+                <div className="font-semibold text-sm">{zustand.gesamtRunden}</div>
+              </div>
+              <div className="bg-white/5 rounded-xl p-3 text-center">
+                <div className="text-xs text-white/40 mb-1">Zeit/Runde</div>
+                <div className="font-semibold text-sm">{konfig?.rundenDauer ?? '–'}s</div>
+              </div>
+            </div>
+            {zustand.playlistName && (
+              <div className="text-sm text-white/60 mb-3">
+                Playlist: <span className="text-white">{zustand.playlistName}</span>
+              </div>
+            )}
+            {aktiveModiBadges.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {aktiveModiBadges.map(modus => (
+                  <span
+                    key={modus}
+                    className="text-xs px-2 py-1 rounded-full bg-brand-500/20 text-brand-400 border border-brand-500/30"
+                  >
+                    {modus}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Rechte Spalte – Spielerliste & Starten */}
+        <div className="lg:w-80 space-y-4">
+          <div className="card p-4">
+            <h2 className="font-semibold mb-3">
+              Spieler{' '}
+              <span className="text-brand-400">{verbundene.length}</span>
+              <span className="text-white/40 text-sm"> verbunden</span>
+            </h2>
+            {spieler.length === 0 ? (
+              <div className="text-white/30 text-sm py-4 text-center">
+                Warte auf Spieler...
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-80 overflow-y-auto">
+                {spieler.map(sp => (
+                  <div key={sp.name} className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2">
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${sp.verbunden ? 'bg-green-400' : 'bg-red-400'}`} />
+                    <span className="flex-1 text-sm truncate">{sp.name}</span>
+                    <button
+                      onClick={() => onAktion('spieler_kicken', { name: sp.name })}
+                      className="text-red-400/60 hover:text-red-400 text-xs ml-1"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={() => onAktion('spiel_starten')}
+            disabled={verbundene.length < 1}
+            className="btn-primary w-full text-lg py-4"
+          >
+            {verbundene.length < 1
+              ? 'Warte auf Spieler...'
+              : `▶ Spiel starten (${verbundene.length} Spieler)`}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Spiel-Steuerung ──────────────────────────────────────────────────────────
 
 function SpielSteuerung({
@@ -240,6 +396,7 @@ function SpielSteuerung({
   lautstaerke: number
   onLautstaerke: (wert: number) => void
 }) {
+  const [qrDataUrl, setQrDataUrl] = useState('')
   const spieler = Object.values(zustand.spieler)
   const verbundene = spieler.filter(sp => sp.verbunden)
   const abgegebene = spieler.filter(sp => sp.hatAbgegeben && !sp.istHost).length
@@ -248,12 +405,38 @@ function SpielSteuerung({
     ? `${window.location.origin}/spielen?spiel=${zustand.spielId}`
     : ''
 
+  useEffect(() => {
+    if (!beitrittsUrl) return
+    QRCode.toDataURL(beitrittsUrl, {
+      width: 128,
+      margin: 1,
+      color: { dark: '#ffffff', light: '#1e1e30' },
+    }).then(setQrDataUrl).catch(() => {})
+  }, [beitrittsUrl])
+
+  const analytik = zustand.rundenAnalytik
+  const jahrzehntEinträge = analytik
+    ? Object.entries(analytik.jahrzehntVerteilung)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+    : []
+  const maxJahrzehnt = jahrzehntEinträge.length > 0 ? Math.max(...jahrzehntEinträge.map(e => e[1])) : 1
+
   return (
     <div className="min-h-screen flex flex-col lg:flex-row gap-4 p-4 max-w-7xl mx-auto">
       {/* Linke Spalte */}
       <div className="flex-1 space-y-4">
         {/* Spiel-ID & QR */}
         <div className="card p-6 text-center">
+          {qrDataUrl && (
+            <img
+              src={qrDataUrl}
+              alt="QR Code"
+              className="mx-auto rounded-lg mb-3"
+              width={128}
+              height={128}
+            />
+          )}
           <div className="text-sm text-white/60 mb-1">Spieler beitreten lassen:</div>
           <div className="text-5xl font-black text-brand-400 tracking-widest mb-2">{zustand.spielId}</div>
           <div className="text-sm text-white/40">{beitrittsUrl}</div>
@@ -274,16 +457,6 @@ function SpielSteuerung({
               <> · Runde <span className="text-white">{zustand.runde}/{zustand.gesamtRunden}</span></>
             )}
           </div>
-
-          {zustand.phase === 'LOBBY' && (
-            <button
-              onClick={() => onAktion('spiel_starten')}
-              disabled={verbundene.length < 1}
-              className="btn-primary w-full"
-            >
-              ▶ Spiel starten ({verbundene.length} Spieler)
-            </button>
-          )}
 
           {zustand.phase === 'SPIELEN' && (
             <div className="space-y-2">
@@ -348,7 +521,7 @@ function SpielSteuerung({
         </div>
       </div>
 
-      {/* Rechte Spalte – Spieler & Rangliste */}
+      {/* Rechte Spalte – Spieler, Rangliste & Analyse */}
       <div className="lg:w-80 space-y-4">
         {/* Spielerliste */}
         <div className="card p-4">
@@ -389,6 +562,62 @@ function SpielSteuerung({
           </div>
         )}
 
+        {/* Rundenanalyse */}
+        {analytik && (
+          <div className="card p-4">
+            <h2 className="font-semibold mb-3">Rundenanalyse</h2>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-white/60">Genauigkeit</span>
+                <span className="font-semibold text-brand-400">{analytik.genauigkeitProzent}%</span>
+              </div>
+
+              {analytik.exaktesTrefferSpieler.length > 0 && (
+                <div className="text-sm">
+                  <span className="text-white/60">Exakt: </span>
+                  <span className="text-green-400">{analytik.exaktesTrefferSpieler.join(', ')}</span>
+                </div>
+              )}
+
+              {analytik.nächsteSpieler.length > 0 && (
+                <div className="text-sm">
+                  <span className="text-white/60">Nächste: </span>
+                  <span>{analytik.nächsteSpieler.join(', ')}</span>
+                </div>
+              )}
+
+              {analytik.geschwindigkeitsChampion && (
+                <div className="text-sm">
+                  <span className="text-white/60">Schnellste: </span>
+                  <span className="text-yellow-400">{analytik.geschwindigkeitsChampion.namen.join(', ')}</span>
+                </div>
+              )}
+
+              {jahrzehntEinträge.length > 0 && (
+                <div>
+                  <div className="text-xs text-white/40 mb-2">Tipp-Verteilung</div>
+                  <div className="space-y-1">
+                    {jahrzehntEinträge.map(([jahrzehnt, anzahl]) => (
+                      <div key={jahrzehnt} className="flex items-center gap-2 text-xs">
+                        <span className={`w-12 text-right flex-shrink-0 ${jahrzehnt === analytik.richtigesJahrzehnt ? 'text-green-400 font-semibold' : 'text-white/60'}`}>
+                          {jahrzehnt}
+                        </span>
+                        <div className="flex-1 bg-white/10 rounded-full h-1.5">
+                          <div
+                            className={`h-1.5 rounded-full ${jahrzehnt === analytik.richtigesJahrzehnt ? 'bg-green-400' : 'bg-brand-500'}`}
+                            style={{ width: `${(anzahl / maxJahrzehnt) * 100}%` }}
+                          />
+                        </div>
+                        <span className="text-white/40 w-4">{anzahl}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Host-Lied-Info */}
         {zustand.hostLied?.jahr && (
           <div className="card p-4 bg-brand-500/5 border-brand-500/20">
@@ -412,6 +641,7 @@ export default function HostSeite() {
   const [tokenFehler, setTokenFehler] = useState(false)
   const [spielId, setSpielId] = useState<string | null>(null)
   const [zustand, setZustand] = useState<SpielZustand | null>(null)
+  const [gespeicherteKonfig, setGespeicherteKonfig] = useState<SpielKonfig | null>(null)
   const [lade, setLade] = useState(false)
   const [fehler, setFehler] = useState<string | null>(null)
   const [playlisten, setPlaylisten] = useState<PlaylistInfo[]>([])
@@ -484,6 +714,7 @@ export default function HostSeite() {
 
       const id = daten.spielId!
       setSpielId(id)
+      setGespeicherteKonfig(konfig)
 
       const s = holeOderErstelleSocket()
       s.emit('host_beitreten', { spielId: id, adminToken })
@@ -546,6 +777,16 @@ export default function HostSeite() {
         fehler={fehler}
         playlisten={playlisten}
         spotifyVerbunden={spotifyVerbunden}
+      />
+    )
+  }
+
+  if (zustand.phase === 'LOBBY') {
+    return (
+      <SpielLobby
+        zustand={zustand}
+        konfig={gespeicherteKonfig}
+        onAktion={handleAktion}
       />
     )
   }
